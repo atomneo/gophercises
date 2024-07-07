@@ -1,7 +1,5 @@
 package main
 
-//todo: add parameter filename
-//todo: calculate valid answers and total questions
 import (
 	"encoding/csv"
 	"flag"
