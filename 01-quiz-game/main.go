@@ -11,27 +11,38 @@ import (
 func main() {
 	fmt.Println("Quiz Game")
 
-	var filename string
-	flag.StringVar(&filename, "f", "questions.csv", "Specify questions filename")
+	filename := flag.String("f", "questions.csv", "Specify questions filename")
+	timeForQuestion := flag.Int("t", 30, "Specify time for question")
 	flag.Parse()
 
-	questions, total := loadFile(filename)
-	correctAnswers := playGame(questions)
+	questions, total := loadFile(*filename)
+	correctAnswers := playGame(questions, *timeForQuestion)
 
 	fmt.Printf("You've answered correct to %d of %d questions\n", correctAnswers, total)
 }
 
 func loadFile(filename string) ([][]string, int){
 	fmt.Printf("Loading file %s\n", filename)
-	fileContent, _ := os.ReadFile(filename)
+	fileContent, loadFileError := os.ReadFile(filename)
+	if loadFileError != nil {
+		fmt.Println("Error occured during loading file:", loadFileError)
+		panic(loadFileError)
+	}
+
 	reader := csv.NewReader(strings.NewReader(string(fileContent)))
 
-	questions, _ := reader.ReadAll()
+	questions, readCsvError := reader.ReadAll()
+
+	if readCsvError!= nil {
+		fmt.Println("Error occured during reading csv values:", readCsvError)
+		panic(readCsvError)
+	}
+
 	fmt.Printf("Loaded %d questions\n", len(questions))
 	return questions, len(questions)
 }
 
-func playGame(questions [][]string) (int) {
+func playGame(questions [][]string, timeForQuestion int) (int) {
 	correct := 0
 	currentQuestion := 1
 	for _, question := range questions {
