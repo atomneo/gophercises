@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
@@ -12,7 +13,8 @@ import (
 )
 
 func main() {
-	filename := flag.String("f", "config.yml", "Config file with mappings")
+	yamlFile := flag.String("y", "config.yml", "Yaml config file with mappings")
+	jsonFile := flag.String("j", "config.json", "Json config file with mappings")
 	flag.Parse()
 
 	mux := defaultMux()
@@ -26,9 +28,23 @@ func main() {
 	}
 	mapHandler := handler.MapHandler(pathsToUrls, mux)
 
+	// Bonus task, add json handler
+	json, err := loadFile(*jsonFile)
+	if err!= nil {
+		panic(err)
+	}
+
+	parsedJson, err := parseJson([]byte(json))
+	if err!= nil {
+		panic(err)
+	}
+
+	// Use existing YAMLHandler, because data format is the same
+	jsonHandler := handler.YAMLHandler(parsedJson, mapHandler)
+
 	// Build the YAMLHandler using the mapHandler as the
 	// fallback
-	yaml, err := loadFile(*filename)
+	yaml, err := loadFile(*yamlFile)
 	if err!= nil {
 		panic(err)
 	}
@@ -38,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	yamlHandler := handler.YAMLHandler(parsedYaml, mapHandler)
+	yamlHandler := handler.YAMLHandler(parsedYaml, jsonHandler)
 
 	fmt.Println("Starting the server on :8080")
  	http.ListenAndServe(":8080", yamlHandler)
@@ -63,5 +79,11 @@ func hello(w http.ResponseWriter, r *http.Request) {
 func parseYaml(yamlContent []byte) ([]models.YamlStruct, error) {
 	var data []models.YamlStruct
 	err := yaml.Unmarshal(yamlContent, &data)
+	return data, err
+}
+
+func parseJson(jsonContent []byte) ([]models.YamlStruct, error) {
+	var data []models.YamlStruct
+	err := json.Unmarshal(jsonContent, &data)
 	return data, err
 }

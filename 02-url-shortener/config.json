@@ -1,0 +1,10 @@
+[
+  {
+    "path": "/cars",
+    "url": "https://google.com/search?q=cars"
+  },
+  {
+    "path": "/go",
+    "url": "https://google.com/search?q=golang"
+  }
+]
